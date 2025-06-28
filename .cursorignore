@@ -1,0 +1,38 @@
+# Archivos que la IA NO debe leer
+.env
+.env.*
+*.env
+
+# Archivos de configuración sensibles
+config/secrets.json
+config/private.json
+credentials.json
+service-account.json
+firebase-key.json
+
+# Archivos de claves y certificados
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.cert
+
+# Archivos de base de datos locales
+*.db
+*.sqlite
+*.sqlite3
+
+# Archivos de sesión
+sessions/
+*.session
+
+# Archivos de backup
+*.bak
+*.backup
+*.old
+
+# Archivos específicos del proyecto
+notes_app.txt
+secrets/
+private/ 
