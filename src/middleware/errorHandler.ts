@@ -18,6 +18,8 @@ export const errorHandler = (
   if (process.env.NODE_ENV === 'development') {
     console.error('Error:', err);
   }
+  console.log(process.env.NODE_ENV);
+  
 
   res.status(statusCode).json({
     success: false,
