@@ -1,9 +1,9 @@
 import { eq, desc, and, gte, lte } from 'drizzle-orm';
-import { db } from '../index.js';
-import { transactions, type Transaction, type NewTransaction } from '../schemas/transaction.js';
-import { users } from '../schemas/user.js';
-import { accounts } from '../schemas/account.js';
-import { categories } from '../schemas/category.js';
+import { db } from '../database/index.js';
+import { transactions, type Transaction, type NewTransaction } from '../database/schemas/transaction.js';
+import { users } from '../database/schemas/user.js';
+import { accounts } from '../database/schemas/account.js';
+import { categories } from '../database/schemas/category.js';
 
 // Crear una nueva transacción
 export async function createTransaction(transactionData: NewTransaction): Promise<Transaction> {

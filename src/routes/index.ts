@@ -2,12 +2,14 @@ import { Request, Response, Router } from 'express';
 import healthRoutes from './health.js';
 
 import userRouter from './users.js';
+import accountRouter from './accounts';
 
 const router = Router();
 
 
 router.use('/health', healthRoutes);
 router.use('/users', userRouter);
+router.use('/accounts', accountRouter);
 
 
 // Ruta por defecto
