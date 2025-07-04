@@ -1,10 +1,11 @@
 import { Router } from 'express';
 import { createUser, getAllUsers, getUserById, updateUser, deleteUser } from '../services/userService.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = Router();
 
-// GET /users - Obtener todos los usuarios
-router.get('/', async (req, res) => {
+// GET /users - Obtener todos los usuarios (protegido)
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const users = await getAllUsers();
     res.json(users);
@@ -14,8 +15,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /users/:id - Obtener un usuario por ID
-router.get('/:id', async (req, res) => {
+// GET /users/:id - Obtener un usuario por ID (protegido)
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) {
@@ -56,8 +57,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT /users/:id - Actualizar un usuario
-router.put('/:id', async (req, res) => {
+// PUT /users/:id - Actualizar un usuario (protegido)
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) {
@@ -83,8 +84,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// DELETE /users/:id - Eliminar un usuario
-router.delete('/:id', async (req, res) => {
+// DELETE /users/:id - Eliminar un usuario (protegido)
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) {

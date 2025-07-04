@@ -3,11 +3,13 @@ import healthRoutes from './health.js';
 
 import userRouter from './users.js';
 import accountRouter from './accounts';
+import authRouter from './auth.js';
 
 const router = Router();
 
 
 router.use('/health', healthRoutes);
+router.use('/auth', authRouter);
 router.use('/users', userRouter);
 router.use('/accounts', accountRouter);
 

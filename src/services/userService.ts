@@ -19,6 +19,11 @@ export async function getUserById(id: number): Promise<User | null> {
   return user || null;
 }
 
+// Obtener un usuario por email
+export async function getUserByEmail(email: string): Promise<User | null> {
+  const [user] = await db.select().from(users).where(eq(users.email, email));
+  return user || null;
+}
 
 // Actualizar un usuario
 export async function updateUser(id: number, userData: Partial<NewUser>): Promise<User | null> {

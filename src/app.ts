@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
 
 import 'dotenv/config';
 
@@ -24,6 +25,9 @@ app.use(cors({
 // Middleware para parsear JSON
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Middleware para parsear cookies
+app.use(cookieParser());
 
 // Logging con Morgan en desarrollo
 if (process.env.NODE_ENV === 'development') {
