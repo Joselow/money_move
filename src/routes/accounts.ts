@@ -56,9 +56,12 @@ router.delete('/:id', async (req, res) => {
 
 // POST /accounts - Crear una nueva cuenta
 router.post('/', async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'No autorizado' });
+  }
   try {
-    const { name, currency, initialBalance, totalBalance, description, userId } = req.body;
-    if (!name || !currency || !userId) {
+    const { name, currency, initialBalance, totalBalance, description } = req.body;
+    if (!name || !currency) {
       return res.status(400).json({ error: 'Faltan campos requeridos' });
     }
     const newAccount = await createAccount({
@@ -67,7 +70,7 @@ router.post('/', async (req, res) => {
       initialBalance: initialBalance ?? '0',
       totalBalance: totalBalance ?? '0',
       description,
-      userId,
+      userId: req.user.id,
     });
     res.status(201).json(newAccount);
   } catch (error) {

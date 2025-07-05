@@ -2,6 +2,8 @@ import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { createUser, getUserByEmail } from '../services/userService.js';
 import { authenticateToken, generateToken } from '../middleware/auth.js';
+import { getSelectedAccount } from '../services/InitialDataService.js';
+import { hasAtLeastTwoAccounts } from '../services/accountService.js';
 
 const router = Router();
 
@@ -106,10 +108,19 @@ router.get('/me', authenticateToken, async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'No autorizado' });
     }
 
-    res.json({
+    const account = await getSelectedAccount(req.user.id);
+    const hasMultipleAccounts = await hasAtLeastTwoAccounts(req.user.id);
+    const response = {
+      user: { ...req.user, hasMultipleAccounts },
+      account,
       success: true,
-      user: req.user
-    });
+    }
+
+    if (!account) {
+      response.account = null;
+    }
+
+    res.json(response);
   } catch (error) {
     console.error('Error al obtener usuario:', error);
     res.status(500).json({ error: 'Error interno del servidor' });

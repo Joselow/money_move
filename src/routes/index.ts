@@ -4,6 +4,7 @@ import healthRoutes from './health.js';
 import userRouter from './users.js';
 import accountRouter from './accounts';
 import authRouter from './auth.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -11,7 +12,7 @@ const router = Router();
 router.use('/health', healthRoutes);
 router.use('/auth', authRouter);
 router.use('/users', userRouter);
-router.use('/accounts', accountRouter);
+router.use('/accounts', authenticateToken, accountRouter);
 
 
 // Ruta por defecto

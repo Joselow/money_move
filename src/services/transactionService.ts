@@ -11,6 +11,17 @@ export async function createTransaction(transactionData: NewTransaction): Promis
   return newTransaction;
 }
 
+
+//Obtener la ultima transaccion de un usuario
+export async function getLastTransactionByUserId(userId: number) {
+  const [lastTransaction] = await db.select({ id: transactions.id, accountId: transactions.accountId })
+                          .from(transactions)
+                          .where(eq(transactions.userId, userId))
+                          .orderBy(desc(transactions.date))
+                          .limit(1);
+  return lastTransaction || null;
+}
+
 // Obtener todas las transacciones de un usuario con información relacionada
 export async function getTransactionsByUserId(userId: number) {
   return await db
