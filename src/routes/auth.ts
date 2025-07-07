@@ -108,16 +108,9 @@ router.get('/me', authenticateToken, async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'No autorizado' });
     }
 
-    const account = await getSelectedAccount(req.user.id);
-    const hasMultipleAccounts = await hasAtLeastTwoAccounts(req.user.id);
     const response = {
-      user: { ...req.user, hasMultipleAccounts },
-      account,
+      user: req.user,
       success: true,
-    }
-
-    if (!account) {
-      response.account = null;
     }
 
     res.json(response);

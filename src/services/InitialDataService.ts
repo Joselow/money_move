@@ -20,3 +20,4 @@ export const getSelectedAccount = async (userId: number): Promise<Account | null
     console.log({ lastTransaction, firstAccount, userId });
     return null;
 }
+
