@@ -1,6 +1,7 @@
 import { asc, eq } from 'drizzle-orm';
 import { db } from '../database/index.js';
 import { accounts, type Account, type NewAccount } from '../database/schemas/account.js';
+import { users } from '../database/schemas/user.js';
 
 // Obtener todas las cuentas de un usuario
 export async function getAccountsByUserId(userId: number): Promise<Account[]> {
@@ -31,8 +32,36 @@ export async function getFirstAccountByUserId(userId: number): Promise<Account |
   return firstAccount || null;
 }
 
+// Obtener la primera cuenta seleecionada del usuario
+export async function getIdSelectedAccountByUserId(userId: number): Promise<Account['id'] | null> {
+  const [user] = await db
+    .select({ accountSelectedId: users.accountSelectedId })
+    .from(users)
+    .where(eq(users.id, userId));
+  
+  if (!user || !user.accountSelectedId) {
+    return null
+  }
+  const [firstAccount] = await db.select({ id: accounts.id }).from(accounts).where(eq(accounts.id, user.accountSelectedId)).limit(1);
+  return firstAccount.id 
+}
+
+export async function getSelectedAccountByUserId(userId: number): Promise<Account | null> {
+  const [user] = await db
+    .select({ accountSelectedId: users.accountSelectedId })
+    .from(users)
+    .where(eq(users.id, userId));
+  
+  if (!user || !user.accountSelectedId) {
+    return null
+  }
+  const [firstAccount] = await db.select().from(accounts).where(eq(accounts.id, user.accountSelectedId)).limit(1);
+  return firstAccount
+}
+
 // verificar si el usuario tiene al menos dos cuentas
 export async function hasAtLeastTwoAccounts(userId: number): Promise<boolean> {
   const response = await db.select({ id: accounts.id }).from(accounts).where(eq(accounts.userId, userId)).limit(2);
   return response.length >= 2;
 }
+

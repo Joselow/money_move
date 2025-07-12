@@ -2,8 +2,6 @@ import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { createUser, getUserByEmail } from '../services/userService.js';
 import { authenticateToken, generateToken } from '../middleware/auth.js';
-import { getSelectedAccount } from '../services/InitialDataService.js';
-import { hasAtLeastTwoAccounts } from '../services/accountService.js';
 
 const router = Router();
 
@@ -37,7 +35,7 @@ router.post('/register', async (req: Request, res: Response) => {
     const token = generateToken({
       id: newUser.id,
       email: newUser.email,
-      name: newUser.name
+      name: newUser.name,
     });
 
     // Enviar respuesta sin la contraseña
@@ -80,7 +78,7 @@ router.post('/login', async (req: Request, res: Response) => {
     const token = generateToken({
       id: user.id,
       email: user.email,
-      name: user.name
+      name: user.name,
     });
 
     // Enviar respuesta sin la contraseña

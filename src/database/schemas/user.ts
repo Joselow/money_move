@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar } from 'drizzle-orm/pg-core';
+import { integer, pgTable, serial, varchar } from 'drizzle-orm/pg-core';
 import { timestamps } from './commons.js';
 
 export const users = pgTable('users', {
@@ -6,8 +6,9 @@ export const users = pgTable('users', {
   name: varchar('name', { length: 255 }).notNull(),
   email: varchar('email', { length: 255 }).notNull().unique(),
   password: varchar('password', { length: 255 }).notNull(),
+  accountSelectedId: integer('account_selected_id'),
   ...timestamps
 });
 
 export type User = typeof users.$inferSelect;
-export type NewUser = typeof users.$inferInsert; 
+export type NewUser = typeof users.$inferInsert;

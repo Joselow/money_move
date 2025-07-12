@@ -15,6 +15,20 @@
       "when": 1751242760417,
       "tag": "0001_smiling_nicolaos",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1752353411593,
+      "tag": "0002_pink_zodiak",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1752355561669,
+      "tag": "0003_dapper_chameleon",
+      "breakpoints": true
     }
   ]
 }

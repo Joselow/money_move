@@ -4,9 +4,12 @@ import { getAccountsByUserId, getAccountById, deleteAccount, createAccount } fro
 const router = Router();
 
 // GET /accounts/user/:userId - Obtener todas las cuentas de un usuario
-router.get('/user/:userId', async (req, res) => {
+router.get('/', async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'No autorizado' });
+  }
   try {
-    const userId = parseInt(req.params.userId);
+    const userId = parseInt(req.user.id);
     if (isNaN(userId)) {
       return res.status(400).json({ error: 'ID de usuario inválido' });
     }
@@ -78,5 +81,6 @@ router.post('/', async (req, res) => {
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
+
 
 export default router; 

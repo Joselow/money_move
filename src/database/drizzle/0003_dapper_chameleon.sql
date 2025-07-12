@@ -1,0 +1,1 @@
+ALTER TABLE "users" RENAME COLUMN "accountSelectedId" TO "account_selected_id";
