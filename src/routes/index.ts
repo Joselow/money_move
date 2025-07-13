@@ -5,6 +5,8 @@ import userRouter from './users.js';
 import accountRouter from './accounts';
 import authRouter from './auth.js';
 import configRouter from './config.js';
+import categoryRouter from './categories.js';
+
 import { authenticateToken } from '../middleware/auth.js';
 
 const router = Router();
@@ -15,6 +17,7 @@ router.use('/auth', authRouter);
 router.use('/users', userRouter);
 router.use('/config', authenticateToken, configRouter);
 router.use('/accounts', authenticateToken, accountRouter);
+router.use('/categories', authenticateToken, categoryRouter);
 
 
 // Ruta por defecto
