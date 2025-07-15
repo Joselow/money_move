@@ -1,29 +1,27 @@
 import { Router } from 'express';
 import { getCategories } from '../services/categoryService.js';
 import { TRANSACTION_TYPE } from '../constants/transaction.js';
+import { catchErrors } from '../utils/catchErrors';
+import { success } from '../utils/responses';
+import { InvalidCredentialsError401 } from '../errors/InvalidCredentialsError401';
+import { BadRequestError400 } from '../errors/BadRequestError400';
 
 const router = Router();
 
 //Obtener todas las categorias
-router.get('/', async (req, res) => {
+router.get('/', catchErrors(async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'No autorizado' });
+    throw new InvalidCredentialsError401('No autorizado');
   }
-  try {
-    const { type } = req.query
+  const { type } = req.query
 
-    if (type != null && (type !== TRANSACTION_TYPE.INFLOW && type !== TRANSACTION_TYPE.OUTFLOW)) {
-        return res.status(400).json({ error: 'El tipo de categoria no es valido' });
-    }
-
-
-    const categories = await getCategories(type);
-    res.json(categories);
-  } catch (error) {
-    console.error('Error al obtener cuentas:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+  if (type != null && (type !== TRANSACTION_TYPE.INFLOW && type !== TRANSACTION_TYPE.OUTFLOW)) {
+    throw new BadRequestError400('El tipo de categoria no es valido');
   }
-});
+
+  const categories = await getCategories(type);
+  success(res, 200, categories);
+}));
 
 
 

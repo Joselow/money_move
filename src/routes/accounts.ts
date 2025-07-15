@@ -1,86 +1,71 @@
 import { Router } from 'express';
 import { getAccountsByUserId, getAccountById, deleteAccount, createAccount } from '../services/accountService.js';
+import { catchErrors } from '../utils/catchErrors';
+import { success } from '../utils/responses';
+import { InvalidCredentialsError401 } from '../errors/InvalidCredentialsError401';
+import { BadRequestError400 } from '../errors/BadRequestError';
+import { NotFoundError404 } from '../errors/NotFoundError404';
 
 const router = Router();
 
 // GET /accounts/user/:userId - Obtener todas las cuentas de un usuario
-router.get('/', async (req, res) => {
+router.get('/', catchErrors(async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'No autorizado' });
+    throw new InvalidCredentialsError401('No autorizado');
   }
-  try {
-    const userId = parseInt(req.user.id);
-    if (isNaN(userId)) {
-      return res.status(400).json({ error: 'ID de usuario inválido' });
-    }
-    const accounts = await getAccountsByUserId(userId);
-    res.json(accounts);
-  } catch (error) {
-    console.error('Error al obtener cuentas:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+  const userId = parseInt(req.user.id);
+  if (isNaN(userId)) {
+    throw new BadRequestError400('ID de usuario inválido');
   }
-});
+  const accounts = await getAccountsByUserId(userId);
+  success(res, 200, accounts);
+}));
 
 // GET /accounts/:id - Obtener una cuenta por ID
-router.get('/:id', async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    if (isNaN(id)) {
-      return res.status(400).json({ error: 'ID de cuenta inválido' });
-    }
-    const account = await getAccountById(id);
-    if (!account) {
-      return res.status(404).json({ error: 'Cuenta no encontrada' });
-    }
-    res.json(account);
-  } catch (error) {
-    console.error('Error al obtener cuenta:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+router.get('/:id', catchErrors(async (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) {
+    throw new BadRequestError400('ID de cuenta inválido');
   }
-});
+  const account = await getAccountById(id);
+  if (!account) {
+    throw new NotFoundError404('Cuenta no encontrada');
+  }
+  success(res, 200, account);
+}));
 
 // DELETE /accounts/:id - Eliminar una cuenta
-router.delete('/:id', async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    if (isNaN(id)) {
-      return res.status(400).json({ error: 'ID de cuenta inválido' });
-    }
-    const deleted = await deleteAccount(id);
-    if (!deleted) {
-      return res.status(404).json({ error: 'Cuenta no encontrada' });
-    }
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error al eliminar cuenta:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+router.delete('/:id', catchErrors(async (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) {
+    throw new BadRequestError400('ID de cuenta inválido');
   }
-});
+  const deleted = await deleteAccount(id);
+  if (!deleted) {
+    throw new NotFoundError404('Cuenta no encontrada');
+  }
+  success(res, 200, { success: true });
+}));
 
 // POST /accounts - Crear una nueva cuenta
-router.post('/', async (req, res) => {
+router.post('/', catchErrors(async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'No autorizado' });
+    throw new InvalidCredentialsError401('No autorizado');
   }
-  try {
-    const { name, currency, initialBalance, totalBalance, description } = req.body;
-    if (!name || !currency) {
-      return res.status(400).json({ error: 'Faltan campos requeridos' });
-    }
-    const newAccount = await createAccount({
-      name,
-      currency,
-      initialBalance: initialBalance ?? '0',
-      totalBalance: totalBalance ?? '0',
-      description,
-      userId: req.user.id,
-    });
-    res.status(201).json(newAccount);
-  } catch (error) {
-    console.error('Error al crear cuenta:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+  const { name, currency, initialBalance, totalBalance, description } = req.body;
+  if (!name || !currency) {
+    throw new BadRequestError400('Faltan campos requeridos');
   }
-});
+  const newAccount = await createAccount({
+    name,
+    currency,
+    initialBalance: initialBalance ?? '0',
+    totalBalance: totalBalance ?? '0',
+    description,
+    userId: req.user.id,
+  });
+  success(res, 201, newAccount);
+}));
 
 
 export default router; 

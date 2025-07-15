@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { error } from '../utils/responses';
 
 export interface AppError extends Error {
   statusCode?: number;
@@ -19,15 +20,14 @@ export const errorHandler = (
     console.error('Error:', err);
   }
   console.log(process.env.NODE_ENV);
-  
 
-  res.status(statusCode).json({
-    success: false,
-    error: {
-      message,
-      ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
-    },
-  });
+  let errorData: any = err;
+
+  if (process.env.NODE_ENV === 'development') {
+    errorData = { stack:err.stack }
+  }
+  
+  error(res, statusCode, message, errorData);
 };
 
 export const notFound = (req: Request, res: Response, next: NextFunction): void => {
