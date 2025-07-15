@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import { getAccountsByUserId, getAccountById, deleteAccount, createAccount } from '../services/accountService.js';
+
 import { catchErrors } from '../utils/catchErrors';
-import { success } from '../utils/responses';
+import { success, simpleSuccess } from '../utils/responses';
+
 import { InvalidCredentialsError401 } from '../errors/InvalidCredentialsError401';
-import { BadRequestError400 } from '../errors/BadRequestError';
+import { BadRequestError400 } from '../errors/BadRequestError400.js';
 import { NotFoundError404 } from '../errors/NotFoundError404';
 
 const router = Router();
@@ -18,7 +20,7 @@ router.get('/', catchErrors(async (req, res) => {
     throw new BadRequestError400('ID de usuario inválido');
   }
   const accounts = await getAccountsByUserId(userId);
-  success(res, 200, accounts);
+  simpleSuccess(res, 200, accounts);
 }));
 
 // GET /accounts/:id - Obtener una cuenta por ID
@@ -64,7 +66,7 @@ router.post('/', catchErrors(async (req, res) => {
     description,
     userId: req.user.id,
   });
-  success(res, 201, newAccount);
+  simpleSuccess(res, 201, newAccount);
 }));
 
 

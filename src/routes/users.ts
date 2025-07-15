@@ -4,7 +4,7 @@ import { authenticateToken } from '../middleware/auth.js';
 import { catchErrors } from '../utils/catchErrors';
 import { success } from '../utils/responses';
 import { InvalidCredentialsError401 } from '../errors/InvalidCredentialsError401';
-import { BadRequestError400 } from '../errors/BadRequestError';
+import { BadRequestError400 } from '../errors/BadRequestError400.js';
 import { NotFoundError404 } from '../errors/NotFoundError404';
 
 const router = Router();

@@ -2,9 +2,10 @@ import { Router } from 'express';
 import { getCategories } from '../services/categoryService.js';
 import { TRANSACTION_TYPE } from '../constants/transaction.js';
 import { catchErrors } from '../utils/catchErrors';
-import { success } from '../utils/responses';
+import { simpleSuccess } from '../utils/responses';
+
 import { InvalidCredentialsError401 } from '../errors/InvalidCredentialsError401';
-import { BadRequestError400 } from '../errors/BadRequestError400';
+import { BadRequestError400 } from '../errors/BadRequestError400.js';
 
 const router = Router();
 
@@ -20,7 +21,7 @@ router.get('/', catchErrors(async (req, res) => {
   }
 
   const categories = await getCategories(type);
-  success(res, 200, categories);
+  simpleSuccess(res, 200, categories);
 }));
 
 

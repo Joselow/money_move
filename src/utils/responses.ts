@@ -8,6 +8,10 @@ export const success = ( res: Response, status: number, data: object ) =>{
   });
 }
 
+export const simpleSuccess = ( res: Response, status: number, data: object ) =>{
+  res.status(status).json(data);
+}
+
 export const error = (res: Response, status: number, message: string, errors?: any) => {
   res.status(status).json({
     success: false,
