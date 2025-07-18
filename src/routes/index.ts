@@ -6,7 +6,7 @@ import accountRouter from './accounts';
 import authRouter from './auth.js';
 import configRouter from './config.js';
 import categoryRouter from './categories.js';
-
+import transactionRouter from './transactions.js';
 import { authenticateToken } from '../middleware/auth.js';
 
 const router = Router();
@@ -18,6 +18,7 @@ router.use('/users', userRouter);
 router.use('/config', authenticateToken, configRouter);
 router.use('/accounts', authenticateToken, accountRouter);
 router.use('/categories', authenticateToken, categoryRouter);
+router.use('/transactions', authenticateToken, transactionRouter);
 
 
 // Ruta por defecto

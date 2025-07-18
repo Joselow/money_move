@@ -2,6 +2,7 @@ import { asc, eq } from 'drizzle-orm';
 import { db } from '../database/index.js';
 import { accounts, type Account, type NewAccount } from '../database/schemas/account.js';
 import { users } from '../database/schemas/user.js';
+import { BadRequestError400 } from '../errors/BadRequestError400.js';
 
 // Obtener todas las cuentas de un usuario
 export async function getAccountsByUserId(userId: number): Promise<Account[]> {
@@ -33,16 +34,19 @@ export async function getFirstAccountByUserId(userId: number): Promise<Account |
 }
 
 // Obtener la primera cuenta seleecionada del usuario
-export async function getIdSelectedAccountByUserId(userId: number): Promise<Account['id'] | null> {
+export async function getIdSelectedAccountByUserId(userId: number): Promise<Account['id']> {
   const [user] = await db
     .select({ accountSelectedId: users.accountSelectedId })
     .from(users)
     .where(eq(users.id, userId));
   
-  if (!user || !user.accountSelectedId) {
-    return null
+  if (!user.accountSelectedId) {
+    throw new BadRequestError400('No se encontro la cuenta seleccionada');
   }
   const [firstAccount] = await db.select({ id: accounts.id }).from(accounts).where(eq(accounts.id, user.accountSelectedId)).limit(1);
+  if (!firstAccount) {
+    throw new BadRequestError400('No se encontro la cuenta seleccionada');
+  }
   return firstAccount.id 
 }
 

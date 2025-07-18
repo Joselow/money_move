@@ -1,4 +1,4 @@
-import { eq, desc, and, gte, lte } from 'drizzle-orm';
+import { eq, desc, and, gte, lte, sum } from 'drizzle-orm';
 import { db } from '../database/index.js';
 import { transactions, type Transaction, type NewTransaction } from '../database/schemas/transaction.js';
 import { users } from '../database/schemas/user.js';
@@ -9,6 +9,23 @@ import { categories } from '../database/schemas/category.js';
 export async function createTransaction(transactionData: NewTransaction): Promise<Transaction> {
   const [newTransaction] = await db.insert(transactions).values(transactionData).returning();
   return newTransaction;
+}
+
+
+// Obtener el total de transferencias del usuario filtrado por fechas limite inicio y final, sumar 
+// las de tipo 1 y restar las del tipo 2, al final dar el valor absoluto
+export async function getTotalTransactionsByUserId({ userId, date }: { userId: number, date?: string }) {
+  const targetDate = date || new Date().toISOString().split('T')[0];
+
+  const [total] = await db.select({ total: sum(transactions.amount) })
+    .from(transactions)
+    .where(
+      and(
+        eq(transactions.userId, userId),
+        eq(transactions.date, targetDate)
+      )
+    );
+  return Number(total) || 0;
 }
 
 
@@ -23,7 +40,17 @@ export async function getLastTransactionByUserId(userId: number) {
 }
 
 // Obtener todas las transacciones de un usuario con información relacionada
-export async function getTransactionsByUserId(userId: number) {
+export async function getTransactionsByUserId({ userId, date }: { userId: number, date?: string }) {
+  let condition = eq(transactions.userId, userId);
+
+  // Si se pasa fecha, agregas la condición extra
+  // if (date) {
+  //   condition = and(
+  //     condition,
+  //     eq(transactions.date, date)
+  //   );
+  // }
+
   return await db
     .select({
       id: transactions.id,
@@ -49,7 +76,14 @@ export async function getTransactionsByUserId(userId: number) {
     .innerJoin(users, eq(transactions.userId, users.id))
     .innerJoin(accounts, eq(transactions.accountId, accounts.id))
     .innerJoin(categories, eq(transactions.categoryId, categories.id))
-    .where(eq(transactions.userId, userId))
+    .where(
+        date 
+          ? and(
+              eq(transactions.userId, userId),
+              eq(transactions.date, date)
+            )
+          : eq(transactions.userId, userId)
+      )
     .orderBy(desc(transactions.date), desc(transactions.createdAt));
 }
 
