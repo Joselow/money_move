@@ -1,9 +1,11 @@
-import { eq, desc, and, gte, lte, sum } from 'drizzle-orm';
+import { eq, desc, and, gte, lte, sum, sql } from 'drizzle-orm';
 import { db } from '../database/index.js';
 import { transactions, type Transaction, type NewTransaction } from '../database/schemas/transaction.js';
 import { users } from '../database/schemas/user.js';
 import { accounts } from '../database/schemas/account.js';
 import { categories } from '../database/schemas/category.js';
+
+import { getIdSelectedAccountByUserId } from './accountService.js';
 
 // Crear una nueva transacción
 export async function createTransaction(transactionData: NewTransaction): Promise<Transaction> {
@@ -12,20 +14,28 @@ export async function createTransaction(transactionData: NewTransaction): Promis
 }
 
 
-// Obtener el total de transferencias del usuario filtrado por fechas limite inicio y final, sumar 
-// las de tipo 1 y restar las del tipo 2, al final dar el valor absoluto
-export async function getTotalTransactionsByUserId({ userId, date }: { userId: number, date?: string }) {
-  const targetDate = date || new Date().toISOString().split('T')[0];
+// Obtener el total de transferencias del usuario filtrado por fecha, sumar 
 
-  const [total] = await db.select({ total: sum(transactions.amount) })
+export async function getTotalTransactionsByUserId({ userId, date }: { userId: number, date: string }) {
+  console.log({
+    userId, date
+  });
+
+  const idSelectedAccount = await getIdSelectedAccountByUserId(userId);
+
+  const [result] = await db.select({ 
+      total: sql<number>`SUM(CASE WHEN ${transactions.type} = '1' THEN ${transactions.amount} ELSE -${transactions.amount} END)`
+    })
     .from(transactions)
     .where(
       and(
         eq(transactions.userId, userId),
-        eq(transactions.date, targetDate)
+        eq(transactions.date, date),
+        eq(transactions.accountId, idSelectedAccount)
       )
     );
-  return Number(total) || 0;
+    
+  return Number(result.total) || 0;
 }
 
 

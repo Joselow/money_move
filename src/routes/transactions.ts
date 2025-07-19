@@ -37,12 +37,18 @@ router.get('/', catchErrors(async (req, res) => {
 
 
 router.get('/total', catchErrors(async (req, res) => {
-const { date } = req.query;
+  const { date }: { date?: string } = req.query;
 
-const total = await getTotalTransactionsByUserId({ userId: req.user.id, date: String(date) });
-const typeTransaction = total > 0 ? TRANSACTION_TYPE.INFLOW : TRANSACTION_TYPE.OUTFLOW;
+  const targetDate = date || new Date().toISOString().split('T')[0];
 
-success(res, 200, { total, typeTransaction });
+  const total = await getTotalTransactionsByUserId({ 
+    userId: req.user.id, 
+    date: targetDate 
+  });
+
+  const typeTransaction = total > 0 ? TRANSACTION_TYPE.INFLOW : TRANSACTION_TYPE.OUTFLOW;
+
+  success(res, 200, { total, typeTransaction });
 }));
 
 // GET /transactions/:id - Obtener una transacción por ID
@@ -79,7 +85,8 @@ router.post('/', catchErrors(async (req, res) => {
     throw new InvalidCredentialsError401('No autorizado');
   }
 
-  const { name, type, amount, description, categoryId, accountId } = req.body;
+  const { name, type, amount, description, categoryId, accountId, date } = req.body;
+
   if (!name || !type || !amount || !categoryId) {
     throw new BadRequestError400('Faltan campos requeridos');
   }
@@ -91,7 +98,7 @@ router.post('/', catchErrors(async (req, res) => {
     type,
     amount,
     description,
-    date: (new Date()).toISOString(),
+    date: date ?? (new Date()).toISOString(),
     accountId: accountIdSelected,
     categoryId,
     userId: req.user.id,
