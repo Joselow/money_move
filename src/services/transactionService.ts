@@ -50,15 +50,33 @@ export async function getLastTransactionByUserId(userId: number) {
 }
 
 // Obtener todas las transacciones de un usuario con información relacionada
-export async function getTransactionsByUserId({ userId, date }: { userId: number, date?: string }) {
-  let condition = eq(transactions.userId, userId);
+export async function getTransactionsByUserId({ userId, startDate, endDate }: { 
+  userId: number, 
+  startDate: string, 
+  endDate?: string 
+}) {
+  const idSelectedAccount = await getIdSelectedAccountByUserId(userId);
 
-  // Si se pasa fecha, agregas la condición extra
-  // if (date) {
-  //   condition = and(
-  //     condition,
-  //     eq(transactions.date, date)
-  //   );
+  // Construir las condiciones base
+  let conditions = [
+    eq(transactions.userId, userId),
+    eq(transactions.accountId, idSelectedAccount)
+  ];
+
+  // Agregar condiciones de fecha según los parámetros recibidos
+  if (startDate && endDate) {
+    // Rango de fechas: desde startDate hasta endDate (inclusivo)
+    conditions.push(
+      gte(transactions.date, startDate),
+      lte(transactions.date, endDate)
+    );
+  } else if (startDate && !endDate) {
+    // Solo una fecha: traer transacciones de ese día específico
+    conditions.push(eq(transactions.date, startDate));
+  } 
+  // else if (!startDate && endDate) {
+  //   // Solo fecha final: traer todas las transacciones hasta esa fecha
+  //   conditions.push(lte(transactions.date, endDate));
   // }
 
   return await db
@@ -86,16 +104,10 @@ export async function getTransactionsByUserId({ userId, date }: { userId: number
     .innerJoin(users, eq(transactions.userId, users.id))
     .innerJoin(accounts, eq(transactions.accountId, accounts.id))
     .innerJoin(categories, eq(transactions.categoryId, categories.id))
-    .where(
-        date 
-          ? and(
-              eq(transactions.userId, userId),
-              eq(transactions.date, date)
-            )
-          : eq(transactions.userId, userId)
-      )
+    .where(and(...conditions))
     .orderBy(desc(transactions.date), desc(transactions.createdAt));
 }
+
 
 // Obtener una transacción por ID con información relacionada
 export async function getTransactionById(id: number) {

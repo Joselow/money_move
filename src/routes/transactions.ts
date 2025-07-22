@@ -28,9 +28,16 @@ router.get('/', catchErrors(async (req, res) => {
     throw new BadRequestError400('ID de usuario inválido');
   }
 
-  const { date } = req.query;
+  const { startDate, endDate } : { startDate?: string, endDate?: string } = req.query;
 
-  const transactions = await getTransactionsByUserId({ userId, date: String(date) });
+  if (!startDate) {
+    throw new BadRequestError400('Necesitas definir una fecha inicial');
+  }
+
+  const targetDate = startDate || new Date().toISOString().split('T')[0];
+
+
+  const transactions = await getTransactionsByUserId({ userId, startDate: targetDate, endDate: endDate });
 
   simpleSuccess(res, 200, transactions);
 }));
