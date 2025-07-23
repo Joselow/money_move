@@ -6,6 +6,7 @@ import { accounts } from '../database/schemas/account.js';
 import { categories } from '../database/schemas/category.js';
 
 import { getIdSelectedAccountByUserId } from './accountService.js';
+import { type TransactionType } from '../interfaces/types.js';
 
 // Crear una nueva transacción
 export async function createTransaction(transactionData: NewTransaction): Promise<Transaction> {
@@ -50,10 +51,12 @@ export async function getLastTransactionByUserId(userId: number) {
 }
 
 // Obtener todas las transacciones de un usuario con información relacionada
-export async function getTransactionsByUserId({ userId, startDate, endDate }: { 
+export async function getTransactionsByUserId({ userId, startDate, endDate, categoryId, type }: { 
   userId: number, 
   startDate: string, 
-  endDate?: string 
+  endDate?: string,
+  categoryId?: number,
+  type?: TransactionType,
 }) {
   const idSelectedAccount = await getIdSelectedAccountByUserId(userId);
 
@@ -74,10 +77,17 @@ export async function getTransactionsByUserId({ userId, startDate, endDate }: {
     // Solo una fecha: traer transacciones de ese día específico
     conditions.push(eq(transactions.date, startDate));
   } 
+  if (categoryId) { conditions.push(eq(transactions.categoryId, categoryId));}
   // else if (!startDate && endDate) {
   //   // Solo fecha final: traer todas las transacciones hasta esa fecha
   //   conditions.push(lte(transactions.date, endDate));
   // }
+
+  if (type) { conditions.push(eq(transactions.type, type));}
+
+  console.log({
+    userId, startDate, endDate, categoryId, idSelectedAccount
+  })
 
   return await db
     .select({

@@ -15,6 +15,7 @@ import { BadRequestError400 } from '../errors/BadRequestError400.js';
 import { NotFoundError404 } from '../errors/NotFoundError404';
 import { getIdSelectedAccountByUserId, getSelectedAccountByUserId } from '../services/accountService.js';
 import { TRANSACTION_TYPE } from '../constants/transaction.js';
+import { TransactionType } from '../interfaces/types.js';
 
 const router = Router();
 
@@ -28,7 +29,7 @@ router.get('/', catchErrors(async (req, res) => {
     throw new BadRequestError400('ID de usuario inválido');
   }
 
-  const { startDate, endDate } : { startDate?: string, endDate?: string } = req.query;
+  const { startDate, endDate, categoryId, type } : any = req.query;
 
   if (!startDate) {
     throw new BadRequestError400('Necesitas definir una fecha inicial');
@@ -37,7 +38,7 @@ router.get('/', catchErrors(async (req, res) => {
   const targetDate = startDate || new Date().toISOString().split('T')[0];
 
 
-  const transactions = await getTransactionsByUserId({ userId, startDate: targetDate, endDate: endDate });
+  const transactions = await getTransactionsByUserId({ userId, startDate: targetDate, endDate: endDate, categoryId, type });
 
   simpleSuccess(res, 200, transactions);
 }));

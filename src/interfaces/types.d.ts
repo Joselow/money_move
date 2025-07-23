@@ -1,0 +1,1 @@
+export type TransactionType = '1' | '0';
