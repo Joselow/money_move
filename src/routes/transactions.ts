@@ -13,9 +13,8 @@ import { success, simpleSuccess } from '../utils/responses';
 import { InvalidCredentialsError401 } from '../errors/InvalidCredentialsError401';
 import { BadRequestError400 } from '../errors/BadRequestError400.js';
 import { NotFoundError404 } from '../errors/NotFoundError404';
-import { getIdSelectedAccountByUserId, getSelectedAccountByUserId } from '../services/accountService.js';
+import { getIdSelectedAccountByUserId } from '../services/accountService.js';
 import { TRANSACTION_TYPE } from '../constants/transaction.js';
-import { TransactionType } from '../interfaces/types.js';
 
 const router = Router();
 
@@ -29,7 +28,7 @@ router.get('/', catchErrors(async (req, res) => {
     throw new BadRequestError400('ID de usuario inválido');
   }
 
-  const { startDate, endDate, categoryId, type } : any = req.query;
+  const { startDate, endDate, categoryId, type, limit, offset } : any = req.query;
 
   if (!startDate) {
     throw new BadRequestError400('Necesitas definir una fecha inicial');
@@ -38,7 +37,7 @@ router.get('/', catchErrors(async (req, res) => {
   const targetDate = startDate || new Date().toISOString().split('T')[0];
 
 
-  const transactions = await getTransactionsByUserId({ userId, startDate: targetDate, endDate: endDate, categoryId, type });
+  const transactions = await getTransactionsByUserId({ userId, startDate: targetDate, endDate: endDate, categoryId, type, limit, offset });
 
   simpleSuccess(res, 200, transactions);
 }));
@@ -93,16 +92,15 @@ router.post('/', catchErrors(async (req, res) => {
     throw new InvalidCredentialsError401('No autorizado');
   }
 
-  const { name, type, amount, description, categoryId, accountId, date } = req.body;
+  const { type, amount, description, categoryId, accountId, date } = req.body;
 
-  if (!name || !type || !amount || !categoryId) {
+  if (!type || !amount || !categoryId) {
     throw new BadRequestError400('Faltan campos requeridos');
   }
 
   const accountIdSelected: number = accountId ? accountId : await getIdSelectedAccountByUserId(req.user.id);
 
   const newTransaction = await createTransaction({
-    name,
     type,
     amount,
     description,

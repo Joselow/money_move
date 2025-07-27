@@ -51,12 +51,14 @@ export async function getLastTransactionByUserId(userId: number) {
 }
 
 // Obtener todas las transacciones de un usuario con información relacionada
-export async function getTransactionsByUserId({ userId, startDate, endDate, categoryId, type }: { 
+export async function getTransactionsByUserId({ userId, startDate, endDate, categoryId, type, limit, offset }: { 
   userId: number, 
   startDate: string, 
   endDate?: string,
   categoryId?: number,
   type?: TransactionType,
+  limit?: number,
+  offset?: number,
 }) {
   const idSelectedAccount = await getIdSelectedAccountByUserId(userId);
 
@@ -89,33 +91,38 @@ export async function getTransactionsByUserId({ userId, startDate, endDate, cate
     userId, startDate, endDate, categoryId, idSelectedAccount
   })
 
-  return await db
-    .select({
-      id: transactions.id,
-      name: transactions.name,
-      type: transactions.type,
-      amount: transactions.amount,
-      description: transactions.description,
-      date: transactions.date,
-      createdAt: transactions.createdAt,
-      updatedAt: transactions.updatedAt,
-      // Información del usuario
-      userName: users.name,
-      userEmail: users.email,
-      // Información de la cuenta
-      accountName: accounts.name,
-      accountCurrency: accounts.currency,
-      // Información de la categoría
-      categoryName: categories.name,
-      categoryColor: categories.color,
-      categoryType: categories.type,
-    })
-    .from(transactions)
-    .innerJoin(users, eq(transactions.userId, users.id))
-    .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-    .innerJoin(categories, eq(transactions.categoryId, categories.id))
-    .where(and(...conditions))
-    .orderBy(desc(transactions.date), desc(transactions.createdAt));
+  
+
+  const baseQuery = db
+  .select({
+    id: transactions.id,
+    type: transactions.type,
+    amount: transactions.amount,
+    description: transactions.description,
+    date: transactions.date,
+    createdAt: transactions.createdAt,
+    updatedAt: transactions.updatedAt,
+    categoryName: categories.name,
+    categoryColor: categories.color,
+  })
+  .from(transactions)
+  .innerJoin(categories, eq(transactions.categoryId, categories.id))
+  .where(and(...conditions))
+  .orderBy(desc(transactions.date), desc(transactions.createdAt));
+
+  let query = baseQuery as any;
+
+  if (limit !== undefined) {
+    console.log("limit", );
+    query = query.limit(limit);
+  }
+
+  if (offset !== undefined) {
+    console.log("offset", offset);
+    query = query.offset(offset);
+  }
+
+return await query;
 }
 
 
@@ -124,23 +131,15 @@ export async function getTransactionById(id: number) {
   const [transaction] = await db
     .select({
       id: transactions.id,
-      name: transactions.name,
       type: transactions.type,
       amount: transactions.amount,
       description: transactions.description,
       date: transactions.date,
       createdAt: transactions.createdAt,
       updatedAt: transactions.updatedAt,
-      // Información del usuario
-      userName: users.name,
-      userEmail: users.email,
-      // Información de la cuenta
-      accountName: accounts.name,
-      accountCurrency: accounts.currency,
       // Información de la categoría
       categoryName: categories.name,
       categoryColor: categories.color,
-      categoryType: categories.type,
     })
     .from(transactions)
     .innerJoin(users, eq(transactions.userId, users.id))

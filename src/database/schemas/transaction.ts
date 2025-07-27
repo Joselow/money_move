@@ -3,7 +3,6 @@ import { timestamps } from './commons.js';
 
 export const transactions = pgTable('transactions', {
   id: serial('id').primaryKey(),
-  name: varchar('name', { length: 255 }).notNull(),
   type: char('type', { length: 1 }).notNull(), // '1' para ingreso, '2' para gasto
   amount: decimal('amount', { precision: 10, scale: 2 }).notNull(),
   description: text('description'),
