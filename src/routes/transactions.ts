@@ -4,7 +4,8 @@ import {
   getTransactionById,
   createTransaction,
   deleteTransaction,
-  getTotalTransactionsByUserId
+  getTotalTransactionsByUserId,
+  updateTransaction
 } from '../services/transactionService.js';
 
 import { catchErrors } from '../utils/catchErrors';
@@ -71,8 +72,6 @@ router.get('/:id', catchErrors(async (req, res) => {
   success(res, 200, transaction);
 }));
 
-
-
 // DELETE /transactions/:id - Eliminar una transacción
 router.delete('/:id', catchErrors(async (req, res) => {
   const id = parseInt(req.params.id);
@@ -110,6 +109,27 @@ router.post('/', catchErrors(async (req, res) => {
     userId: req.user.id,
   });
   simpleSuccess(res, 201, newTransaction);
+}));
+
+//PUT /transactions/:id - Actualizar una transacción
+router.patch('/:id', catchErrors(async (req, res) => {
+  const { id } = req.params
+  if (id && isNaN(Number(id))) {
+    throw new BadRequestError400('ID de transacción inválido');
+  }
+  const { amount, date, categoryId, description, accountId} = req.body;
+  if (!amount || !date || !categoryId) {
+    throw new BadRequestError400('Faltan campos requeridos');
+  }
+  const updatedTransaction = await updateTransaction(Number(id), {
+    amount,
+    description,
+    date,
+    accountId: accountId,
+    categoryId,
+    userId: req.user.id,
+  });
+  simpleSuccess(res, 200, updatedTransaction ?? { message: 'Transacción no encontrada' });
 }));
 
 export default router;

@@ -14,7 +14,6 @@ export async function createTransaction(transactionData: NewTransaction): Promis
   return newTransaction;
 }
 
-
 // Obtener el total de transferencias del usuario filtrado por fecha, sumar 
 
 export async function getTotalTransactionsByUserId({ userId, date }: { userId: number, date: string }) {
@@ -104,6 +103,8 @@ export async function getTransactionsByUserId({ userId, startDate, endDate, cate
     updatedAt: transactions.updatedAt,
     categoryName: categories.name,
     categoryColor: categories.color,
+    categoryId: transactions.categoryId,
+    accountId: transactions.accountId,
   })
   .from(transactions)
   .innerJoin(categories, eq(transactions.categoryId, categories.id))
@@ -137,13 +138,12 @@ export async function getTransactionById(id: number) {
       date: transactions.date,
       createdAt: transactions.createdAt,
       updatedAt: transactions.updatedAt,
-      // Información de la categoría
       categoryName: categories.name,
       categoryColor: categories.color,
+      categoryId: transactions.categoryId,
+      accountId: transactions.accountId,
     })
     .from(transactions)
-    .innerJoin(users, eq(transactions.userId, users.id))
-    .innerJoin(accounts, eq(transactions.accountId, accounts.id))
     .innerJoin(categories, eq(transactions.categoryId, categories.id))
     .where(eq(transactions.id, id));
   
