@@ -127,7 +127,7 @@ router.delete('/:id', catchErrors(async (req, res) => {
   if (isNaN(id)) {
     throw new BadRequestError400('ID de transacción inválido');
   }
-  const deleted = await deleteTransaction(id);
+  const deleted = await deleteTransaction(id, req.user.id);
   if (!deleted) {
     throw new NotFoundError404('Transacción no encontrada');
   }

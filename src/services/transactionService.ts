@@ -199,7 +199,7 @@ export async function deleteTransaction(id: number, idUser: number): Promise<boo
       amount: transactions.amount,
       accountId: transactions.accountId,
     }).from(transactions)
-      .where(eq(transactions.id, id));
+      .where(eq(transactions.id, accountSelectedId));
 
     if (!transactionFound) {
       throw new NotFoundError404('Transacción no encontrada');
