@@ -1,8 +1,9 @@
-import { asc, eq } from 'drizzle-orm';
+import { asc, eq, sql } from 'drizzle-orm';
 import { db } from '../database/index.js';
 import { accounts, type Account, type NewAccount } from '../database/schemas/account.js';
 import { users } from '../database/schemas/user.js';
-import { BadRequestError400 } from '../errors/BadRequestError400.js';
+
+import { NotFoundError404 } from '../errors/NotFoundError404.js';
 
 // Obtener todas las cuentas de un usuario
 export async function getAccountsByUserId(userId: number): Promise<Account[]> {
@@ -41,11 +42,11 @@ export async function getIdSelectedAccountByUserId(userId: number): Promise<Acco
     .where(eq(users.id, userId));
   
   if (!user.accountSelectedId) {
-    throw new BadRequestError400('No se encontro la cuenta seleccionada');
+    throw new NotFoundError404('No existe una cuenta seleccionada');
   }
   const [firstAccount] = await db.select({ id: accounts.id }).from(accounts).where(eq(accounts.id, user.accountSelectedId)).limit(1);
   if (!firstAccount) {
-    throw new BadRequestError400('No se encontro la cuenta seleccionada');
+    throw new NotFoundError404('No existe una cuenta seleccionada');
   }
   return firstAccount.id 
 }
@@ -67,5 +68,29 @@ export async function getSelectedAccountByUserId(userId: number): Promise<Accoun
 export async function hasAtLeastTwoAccounts(userId: number): Promise<boolean> {
   const response = await db.select({ id: accounts.id }).from(accounts).where(eq(accounts.userId, userId)).limit(2);
   return response.length >= 2;
+}
+
+
+// actualizar el totalBalance de la cuenta
+export async function addBalance(accountId: number, amount: number) {
+  console.log({accountId, amount, new: Number(accounts.totalBalance) + amount});
+  
+  await db.update(accounts)
+      .set({
+        totalBalance: sql`${accounts.totalBalance} + ${amount}`
+      })
+      .where(eq(accounts.id, accountId));
+
+  return amount;
+}
+
+export async function subsBalance(accountId: number, amount: number) {
+  await db.update(accounts)
+      .set({ 
+        totalBalance: sql`${accounts.totalBalance} - ${amount}`
+      })
+      .where(eq(accounts.id, accountId));
+
+  return amount;
 }
 

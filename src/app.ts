@@ -22,6 +22,9 @@ app.use(cors({
   credentials: true,
 }));
 
+console.log(process.env.CORS_ORIGIN);
+
+
 // Middleware para parsear JSON
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));

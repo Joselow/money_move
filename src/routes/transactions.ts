@@ -29,7 +29,7 @@ router.get('/', catchErrors(async (req, res) => {
     throw new BadRequestError400('ID de usuario inválido');
   }
 
-  const { startDate, endDate, categoryId, type, limit, offset } : any = req.query;
+  const { startDate, endDate, categoryId, type, limit, offset, all } : any = req.query;
 
   if (!startDate) {
     throw new BadRequestError400('Necesitas definir una fecha inicial');
@@ -38,7 +38,9 @@ router.get('/', catchErrors(async (req, res) => {
   const targetDate = startDate || new Date().toISOString().split('T')[0];
 
 
-  const transactions = await getTransactionsByUserId({ userId, startDate: targetDate, endDate: endDate, categoryId, type, limit, offset });
+  const transactions = await getTransactionsByUserId({ 
+    userId, startDate: targetDate, endDate, 
+    categoryId, type, limit, offset, all });
 
   simpleSuccess(res, 200, transactions);
 }));
@@ -70,19 +72,6 @@ router.get('/:id', catchErrors(async (req, res) => {
     throw new NotFoundError404('Transacción no encontrada');
   }
   success(res, 200, transaction);
-}));
-
-// DELETE /transactions/:id - Eliminar una transacción
-router.delete('/:id', catchErrors(async (req, res) => {
-  const id = parseInt(req.params.id);
-  if (isNaN(id)) {
-    throw new BadRequestError400('ID de transacción inválido');
-  }
-  const deleted = await deleteTransaction(id);
-  if (!deleted) {
-    throw new NotFoundError404('Transacción no encontrada');
-  }
-  success(res, 200, { success: true });
 }));
 
 // POST /transactions - Crear una nueva transacción
@@ -117,7 +106,7 @@ router.patch('/:id', catchErrors(async (req, res) => {
   if (id && isNaN(Number(id))) {
     throw new BadRequestError400('ID de transacción inválido');
   }
-  const { amount, date, categoryId, description, accountId} = req.body;
+  const { amount, date, categoryId, description, accountId } = req.body;
   if (!amount || !date || !categoryId) {
     throw new BadRequestError400('Faltan campos requeridos');
   }
@@ -131,5 +120,19 @@ router.patch('/:id', catchErrors(async (req, res) => {
   });
   simpleSuccess(res, 200, updatedTransaction ?? { message: 'Transacción no encontrada' });
 }));
+
+// DELETE /transactions/:id - Eliminar una transacción
+router.delete('/:id', catchErrors(async (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) {
+    throw new BadRequestError400('ID de transacción inválido');
+  }
+  const deleted = await deleteTransaction(id);
+  if (!deleted) {
+    throw new NotFoundError404('Transacción no encontrada');
+  }
+  success(res, 200, { success: true });
+}));
+
 
 export default router;

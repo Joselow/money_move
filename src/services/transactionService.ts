@@ -1,25 +1,16 @@
-import { eq, desc, and, gte, lte, sum, sql } from 'drizzle-orm';
+import { eq, desc, and, gte, lte, sql } from 'drizzle-orm';
 import { db } from '../database/index.js';
 import { transactions, type Transaction, type NewTransaction } from '../database/schemas/transaction.js';
-import { users } from '../database/schemas/user.js';
-import { accounts } from '../database/schemas/account.js';
 import { categories } from '../database/schemas/category.js';
 
-import { getIdSelectedAccountByUserId } from './accountService.js';
+import { getIdSelectedAccountByUserId, subsBalance, addBalance } from './accountService.js';
 import { type TransactionType } from '../interfaces/types.js';
-
-// Crear una nueva transacción
-export async function createTransaction(transactionData: NewTransaction): Promise<Transaction> {
-  const [newTransaction] = await db.insert(transactions).values(transactionData).returning();
-  return newTransaction;
-}
+import { TRANSACTION_TYPE } from '../constants/transaction.js';
+import { NotFoundError404 } from '../errors/NotFoundError404.js';
 
 // Obtener el total de transferencias del usuario filtrado por fecha, sumar 
-
 export async function getTotalTransactionsByUserId({ userId, date }: { userId: number, date: string }) {
-  console.log({
-    userId, date
-  });
+
 
   const idSelectedAccount = await getIdSelectedAccountByUserId(userId);
 
@@ -38,19 +29,8 @@ export async function getTotalTransactionsByUserId({ userId, date }: { userId: n
   return Number(result.total) || 0;
 }
 
-
-//Obtener la ultima transaccion de un usuario
-export async function getLastTransactionByUserId(userId: number) {
-  const [lastTransaction] = await db.select({ id: transactions.id, accountId: transactions.accountId })
-                          .from(transactions)
-                          .where(eq(transactions.userId, userId))
-                          .orderBy(desc(transactions.date))
-                          .limit(1);
-  return lastTransaction || null;
-}
-
 // Obtener todas las transacciones de un usuario con información relacionada
-export async function getTransactionsByUserId({ userId, startDate, endDate, categoryId, type, limit, offset }: { 
+export async function getTransactionsByUserId({ userId, startDate, endDate, categoryId, type, limit, offset, all }: { 
   userId: number, 
   startDate: string, 
   endDate?: string,
@@ -58,6 +38,7 @@ export async function getTransactionsByUserId({ userId, startDate, endDate, cate
   type?: TransactionType,
   limit?: number,
   offset?: number,
+  all?: boolean | 'true' | 'false'
 }) {
   const idSelectedAccount = await getIdSelectedAccountByUserId(userId);
 
@@ -86,11 +67,8 @@ export async function getTransactionsByUserId({ userId, startDate, endDate, cate
 
   if (type) { conditions.push(eq(transactions.type, type));}
 
-  console.log({
-    userId, startDate, endDate, categoryId, idSelectedAccount
-  })
 
-  
+  const all_accounts = all === 'true' || all === true;
 
   const baseQuery = db
   .select({
@@ -113,19 +91,19 @@ export async function getTransactionsByUserId({ userId, startDate, endDate, cate
 
   let query = baseQuery as any;
 
-  if (limit !== undefined) {
-    console.log("limit", );
-    query = query.limit(limit);
+
+  if (!all_accounts) {
+    if (limit !== undefined) {
+      query = query.limit(Number(limit));
+    }
+  
+    if (offset !== undefined) {
+      query = query.offset(Number(offset));
+    }
   }
 
-  if (offset !== undefined) {
-    console.log("offset", offset);
-    query = query.offset(offset);
-  }
-
-return await query;
+  return await query;
 }
-
 
 // Obtener una transacción por ID con información relacionada
 export async function getTransactionById(id: number) {
@@ -150,33 +128,93 @@ export async function getTransactionById(id: number) {
   return transaction || null;
 }
 
-// Obtener transacciones por rango de fechas
-export async function getTransactionsByDateRange(userId: number, startDate: Date, endDate: Date) {
-  return await db
-    .select()
-    .from(transactions)
-    .where(
-      and(
-        eq(transactions.userId, userId),
-        gte(transactions.date, startDate.toISOString().split('T')[0]),
-        lte(transactions.date, endDate.toISOString().split('T')[0])
-      )
-    )
-    .orderBy(desc(transactions.date));
+// Crear una nueva transacción
+export async function createTransaction(transactionData: NewTransaction): Promise<Transaction> {
+  return db.transaction(async (tx) => {
+    const [newTransaction] = await tx.insert(transactions)
+      .values(transactionData)
+      .returning();
+
+    if (transactionData.type === TRANSACTION_TYPE.INFLOW) {
+      console.log('add', transactionData.amount);
+      
+      await addBalance(transactionData.accountId, Number(transactionData.amount));
+    } else {
+      console.log('substract', transactionData.amount);
+      
+      await subsBalance(transactionData.accountId, Number(transactionData.amount));
+    }
+
+    return newTransaction;
+  });
 }
 
 // Actualizar una transacción
 export async function updateTransaction(id: number, transactionData: Partial<NewTransaction>): Promise<Transaction | null> {
-  const [updatedTransaction] = await db
-    .update(transactions)
-    .set({ ...transactionData, updatedAt: new Date() })
-    .where(eq(transactions.id, id))
-    .returning();
-  return updatedTransaction || null;
+  return db.transaction(async (tx) => {
+    const [transactionFound] = await tx.select({
+      type: transactions.type,
+      amount: transactions.amount,
+      accountId: transactions.accountId,
+    }).from(transactions)
+      .where(eq(transactions.id, id));
+
+    if (!transactionFound) {
+      throw new NotFoundError404('Transacción no encontrada');
+    }
+
+    const diference = Number(transactionFound.amount) - Number(transactionData.amount || 0);
+
+    if (transactionFound.type === TRANSACTION_TYPE.INFLOW) {
+      if (diference > 0) {
+        await subsBalance(transactionFound.accountId, Math.abs(diference));
+      } else if (diference < 0) {
+        await addBalance(transactionFound.accountId, Math.abs(diference));
+      }
+    } else {
+      if (diference > 0) {
+        await addBalance(transactionFound.accountId, Math.abs(diference));
+      } else if (diference < 0) {
+        await subsBalance(transactionFound.accountId, Math.abs(diference));
+      }
+    }
+
+    const [updatedTransaction] = await tx
+      .update(transactions)
+      .set({ ...transactionData, updatedAt: new Date() })
+      .where(eq(transactions.id, id))
+      .returning();
+
+    return updatedTransaction || null;
+  });
 }
 
 // Eliminar una transacción
-export async function deleteTransaction(id: number): Promise<boolean> {
-  const [deletedTransaction] = await db.delete(transactions).where(eq(transactions.id, id)).returning();
-  return !!deletedTransaction;
-} 
+export async function deleteTransaction(id: number, idUser: number): Promise<boolean> {
+  return db.transaction(async (tx) => {
+    const accountSelectedId = await getIdSelectedAccountByUserId(idUser);
+
+    const [transactionFound] = await tx.select({
+      type: transactions.type,
+      amount: transactions.amount,
+      accountId: transactions.accountId,
+    }).from(transactions)
+      .where(eq(transactions.id, id));
+
+    if (!transactionFound) {
+      throw new NotFoundError404('Transacción no encontrada');
+    }
+
+    if (transactionFound.type === TRANSACTION_TYPE.INFLOW) {
+      await subsBalance(transactionFound.accountId, Number(transactionFound.amount));
+    } else {
+      await addBalance(transactionFound.accountId, Number(transactionFound.amount));
+    }
+
+    const [deletedTransaction] = await tx.delete(transactions)
+      .where(eq(transactions.id, id))
+      .returning();
+      
+    return !!deletedTransaction;
+  });
+}

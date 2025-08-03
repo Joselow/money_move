@@ -9,7 +9,7 @@ export const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
   
   // Configuración de CORS
-  corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:4000',
   
   // Configuración de base de datos (para futuras implementaciones)
   database: {
