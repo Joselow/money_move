@@ -2,7 +2,7 @@ import { Request, Response, Router } from 'express';
 import healthRoutes from './health.js';
 
 import userRouter from './users.js';
-import accountRouter from './accounts';
+import accountRouter from './accounts.js';
 import authRouter from './auth.js';
 import configRouter from './config.js';
 import categoryRouter from './categories.js';

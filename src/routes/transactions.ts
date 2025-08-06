@@ -8,12 +8,12 @@ import {
   updateTransaction
 } from '../services/transactionService.js';
 
-import { catchErrors } from '../utils/catchErrors';
-import { success, simpleSuccess } from '../utils/responses';
+import { catchErrors } from '../utils/catchErrors.js';
+import { success, simpleSuccess } from '../utils/responses.js';
 
-import { InvalidCredentialsError401 } from '../errors/InvalidCredentialsError401';
+import { InvalidCredentialsError401 } from '../errors/InvalidCredentialsError401.js';
 import { BadRequestError400 } from '../errors/BadRequestError400.js';
-import { NotFoundError404 } from '../errors/NotFoundError404';
+import { NotFoundError404 } from '../errors/NotFoundError404.js';
 import { getIdSelectedAccountByUserId } from '../services/accountService.js';
 import { TRANSACTION_TYPE } from '../constants/transaction.js';
 
