@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import { getCategories } from '../services/categoryService.js';
 import { TRANSACTION_TYPE } from '../constants/transaction.js';
-import { catchErrors } from '../utils/catchErrors';
-import { simpleSuccess } from '../utils/responses';
+import { catchErrors } from '../utils/catchErrors.js';
+import { simpleSuccess } from '../utils/responses.js';
 
-import { InvalidCredentialsError401 } from '../errors/InvalidCredentialsError401';
+import { InvalidCredentialsError401 } from '../errors/InvalidCredentialsError401.js';
 import { BadRequestError400 } from '../errors/BadRequestError400.js';
 
 const router = Router();

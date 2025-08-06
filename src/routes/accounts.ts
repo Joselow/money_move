@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { getAccountsByUserId, getAccountById, deleteAccount, createAccount } from '../services/accountService.js';
 
-import { catchErrors } from '../utils/catchErrors';
-import { success, simpleSuccess } from '../utils/responses';
+import { catchErrors } from '../utils/catchErrors.js';
+import { success, simpleSuccess } from '../utils/responses.js';
 
-import { InvalidCredentialsError401 } from '../errors/InvalidCredentialsError401';
+import { InvalidCredentialsError401 } from '../errors/InvalidCredentialsError401.js';
 import { BadRequestError400 } from '../errors/BadRequestError400.js';
-import { NotFoundError404 } from '../errors/NotFoundError404';
+import { NotFoundError404 } from '../errors/NotFoundError404.js';
 
 const router = Router();
 
@@ -68,6 +68,5 @@ router.post('/', catchErrors(async (req, res) => {
   });
   simpleSuccess(res, 201, newAccount);
 }));
-
 
 export default router; 

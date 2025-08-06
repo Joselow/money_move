@@ -1,9 +1,9 @@
 import { Router, Request, Response } from 'express';
-import { getSelectedAccount, updateSelectedAccount } from '../services/userConfigService';
-import { hasAtLeastTwoAccounts } from '../services/accountService';
-import { success } from '../utils/responses';
-import { catchErrors } from '../utils/catchErrors';
-import { InvalidCredentialsError401 } from '../errors/InvalidCredentialsError401';
+import { getSelectedAccount, updateSelectedAccount } from '../services/userConfigService.js';
+import { hasAtLeastTwoAccounts } from '../services/accountService.js';
+import { success } from '../utils/responses.js';
+import { catchErrors } from '../utils/catchErrors.js';
+import { InvalidCredentialsError401 } from '../errors/InvalidCredentialsError401.js';
 
 const router = Router();
 

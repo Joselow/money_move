@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
-import { db } from "../database";
-import { Account, users } from "../database/schemas";
-import { getSelectedAccountByUserId } from "./accountService";
+import { db } from "../database/index.js";
+import { Account, users } from "../database/schemas/index.js";
+import { getSelectedAccountByUserId } from "./accountService.js";
 
 export const getSelectedAccount = async (userId: number): Promise<Account | null> => {
     const account = await getSelectedAccountByUserId(userId);
