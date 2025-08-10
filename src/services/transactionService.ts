@@ -199,11 +199,14 @@ export async function deleteTransaction(id: number, idUser: number): Promise<boo
       amount: transactions.amount,
       accountId: transactions.accountId,
     }).from(transactions)
-      .where(eq(transactions.id, accountSelectedId));
+      .where(eq(transactions.id, id));
 
+    console.log(transactionFound, { id, idUser, accountSelectedId});
+    
     if (!transactionFound) {
       throw new NotFoundError404('Transacción no encontrada');
     }
+    
 
     if (transactionFound.type === TRANSACTION_TYPE.INFLOW) {
       await subsBalance(transactionFound.accountId, Number(transactionFound.amount));

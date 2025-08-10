@@ -72,9 +72,7 @@ export async function hasAtLeastTwoAccounts(userId: number): Promise<boolean> {
 
 
 // actualizar el totalBalance de la cuenta
-export async function addBalance(accountId: number, amount: number) {
-  console.log({accountId, amount, new: Number(accounts.totalBalance) + amount});
-  
+export async function addBalance(accountId: number, amount: number) {  
   await db.update(accounts)
       .set({
         totalBalance: sql`${accounts.totalBalance} + ${amount}`
