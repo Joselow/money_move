@@ -200,8 +200,6 @@ export async function deleteTransaction(id: number, idUser: number): Promise<boo
       accountId: transactions.accountId,
     }).from(transactions)
       .where(eq(transactions.id, id));
-
-    console.log(transactionFound, { id, idUser, accountSelectedId});
     
     if (!transactionFound) {
       throw new NotFoundError404('Transacción no encontrada');
