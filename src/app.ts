@@ -9,9 +9,19 @@ import 'dotenv/config';
 
 import routes from './routes/index.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
+import { globalLimiter } from './middleware/rateLimiter.js';
 
 
 const app = express();
+
+// Configuración de proxy (Nginx delante)
+app.set('trust proxy', 1);
+
+
+// Aplicas el rate limit a TODA la API (todo lo que cuelga de /api)
+app.use('/api', globalLimiter);
+
+// =====================================
 
 // Middleware de seguridad
 app.use(helmet());
@@ -38,6 +48,11 @@ if (process.env.NODE_ENV === 'development') {
 } else {
   app.use(morgan('combined'));
 }
+
+
+app.get('/api/test', (req, res) => {
+  res.json({ ip: req.ip });
+});
 
 // Rutas de la API
 app.use('/api', routes);

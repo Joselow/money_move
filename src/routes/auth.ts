@@ -7,10 +7,13 @@ import { authenticateToken, generateToken } from '../middleware/auth.js';
 import { catchErrors } from '../utils/catchErrors.js';
 import { success } from '../utils/responses.js';
 
+import { createAccountLimiter, loginLimiter } from '../middleware/rateLimiter.js';
+
 const router = Router();
 
+
 // POST /auth/register - Registrar un nuevo usuario
-router.post('/register', catchErrors(async (req: Request, res: Response) => {
+router.post('/register', createAccountLimiter, catchErrors(async (req: Request, res: Response) => {
   const { name, email, password } = req.body;
 
   if (!name || !email || !password) {
@@ -51,7 +54,7 @@ router.post('/register', catchErrors(async (req: Request, res: Response) => {
 }));
 
 // POST /auth/login - Iniciar sesión
-router.post('/login', catchErrors(async (req: Request, res: Response) => {
+router.post('/login', loginLimiter, catchErrors(async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
