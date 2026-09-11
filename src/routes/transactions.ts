@@ -15,7 +15,6 @@ import { InvalidCredentialsError401 } from '../errors/InvalidCredentialsError401
 import { BadRequestError400 } from '../errors/BadRequestError400.js';
 import { NotFoundError404 } from '../errors/NotFoundError404.js';
 import { getIdSelectedAccountByUserId } from '../services/accountService.js';
-import { TRANSACTION_TYPE } from '../constants/transaction.js';
 
 const router = Router();
 
@@ -51,14 +50,40 @@ router.get('/total', catchErrors(async (req, res) => {
 
   const targetDate = date || new Date().toISOString().split('T')[0];
 
-  const total = await getTotalTransactionsByUserId({ 
-    userId: req.user.id, 
-    date: targetDate 
+  const totals = await getTotalTransactionsByUserId({
+    userId: req.user.id,
+    date: targetDate,
   });
 
-  const typeTransaction = total > 0 ? TRANSACTION_TYPE.INFLOW : TRANSACTION_TYPE.OUTFLOW;
+  success(res, 200, totals);
+}));
 
-  success(res, 200, { total, typeTransaction });
+router.get('/export', catchErrors(async (req, res) => {
+  if (!req.user) {
+    throw new InvalidCredentialsError401('No autorizado');
+  }
+
+  const userId = parseInt(req.user.id);
+  if (isNaN(userId)) {
+    throw new BadRequestError400('ID de usuario inválido');
+  }
+
+  const { startDate, endDate, categoryId, type }: any = req.query;
+
+  if (!startDate) {
+    throw new BadRequestError400('Necesitas definir una fecha inicial');
+  }
+
+  const transactions = await getTransactionsByUserId({
+    userId,
+    startDate,
+    endDate,
+    categoryId,
+    type,
+    all: true,
+  });
+
+  simpleSuccess(res, 200, transactions);
 }));
 
 // GET /transactions/:id - Obtener una transacción por ID
@@ -106,7 +131,7 @@ router.patch('/:id', catchErrors(async (req, res) => {
   if (id && isNaN(Number(id))) {
     throw new BadRequestError400('ID de transacción inválido');
   }
-  const { amount, date, categoryId, description, accountId } = req.body;
+  const { amount, date, categoryId, description, accountId, type } = req.body;
   if (!amount || !date || !categoryId) {
     throw new BadRequestError400('Faltan campos requeridos');
   }
@@ -114,8 +139,9 @@ router.patch('/:id', catchErrors(async (req, res) => {
     amount,
     description,
     date,
-    accountId: accountId,
+    accountId,
     categoryId,
+    type,
     userId: req.user.id,
   });
   simpleSuccess(res, 200, updatedTransaction ?? { message: 'Transacción no encontrada' });

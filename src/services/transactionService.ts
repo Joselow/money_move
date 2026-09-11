@@ -8,15 +8,13 @@ import { type TransactionType } from '../interfaces/types.js';
 import { TRANSACTION_TYPE } from '../constants/transaction.js';
 import { NotFoundError404 } from '../errors/NotFoundError404.js';
 
-// Obtener el total de transferencias del usuario filtrado por fecha, sumar 
 export async function getTotalTransactionsByUserId({ userId, date }: { userId: number, date: string }) {
-
-
   const idSelectedAccount = await getIdSelectedAccountByUserId(userId);
 
-  const [result] = await db.select({ 
-      total: sql<number>`SUM(CASE WHEN ${transactions.type} = '1' THEN ${transactions.amount} ELSE -${transactions.amount} END)`
-    })
+  const [result] = await db.select({
+    inflows: sql<number>`COALESCE(SUM(CASE WHEN ${transactions.type} = '1' THEN ${transactions.amount} ELSE 0 END), 0)`,
+    outflows: sql<number>`COALESCE(SUM(CASE WHEN ${transactions.type} = '0' THEN ${transactions.amount} ELSE 0 END), 0)`,
+  })
     .from(transactions)
     .where(
       and(
@@ -25,8 +23,11 @@ export async function getTotalTransactionsByUserId({ userId, date }: { userId: n
         eq(transactions.accountId, idSelectedAccount)
       )
     );
-    
-  return Number(result.total) || 0;
+
+  return {
+    inflows: Number(result.inflows) || 0,
+    outflows: Number(result.outflows) || 0,
+  };
 }
 
 // Obtener todas las transacciones de un usuario con información relacionada
@@ -163,25 +164,29 @@ export async function updateTransaction(id: number, transactionData: Partial<New
       throw new NotFoundError404('Transacción no encontrada');
     }
 
-    const diference = Number(transactionFound.amount) - Number(transactionData.amount || 0);
+    const oldType = transactionFound.type;
+    const oldAmount = Number(transactionFound.amount);
+    const oldAccountId = transactionFound.accountId;
 
-    if (transactionFound.type === TRANSACTION_TYPE.INFLOW) {
-      if (diference > 0) {
-        await subsBalance(transactionFound.accountId, Math.abs(diference));
-      } else if (diference < 0) {
-        await addBalance(transactionFound.accountId, Math.abs(diference));
-      }
+    const newType = transactionData.type ?? oldType;
+    const newAmount = Number(transactionData.amount ?? transactionFound.amount);
+    const newAccountId = transactionData.accountId ?? oldAccountId;
+
+    if (oldType === TRANSACTION_TYPE.INFLOW) {
+      await subsBalance(oldAccountId, oldAmount);
     } else {
-      if (diference > 0) {
-        await addBalance(transactionFound.accountId, Math.abs(diference));
-      } else if (diference < 0) {
-        await subsBalance(transactionFound.accountId, Math.abs(diference));
-      }
+      await addBalance(oldAccountId, oldAmount);
+    }
+
+    if (newType === TRANSACTION_TYPE.INFLOW) {
+      await addBalance(newAccountId, newAmount);
+    } else {
+      await subsBalance(newAccountId, newAmount);
     }
 
     const [updatedTransaction] = await tx
       .update(transactions)
-      .set({ ...transactionData, updatedAt: new Date() })
+      .set({ ...transactionData, type: newType, updatedAt: new Date() })
       .where(eq(transactions.id, id))
       .returning();
 
